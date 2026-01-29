@@ -1,0 +1,31 @@
+Suppose that our goal is the following:
+
+Build a production-ready data ingestion system that extracts event data from the DataSync Analytics API and stores it in a PostgreSQL database.
+
+
+Requirements:
+Our solution must:
+1. Run entirely in Docker using the provided `docker-compose.yml`
+2. Work with the command: `sh run-ingestion.sh`
+
+Must Have
+1. TypeScript codebase
+2. PostgreSQL for data storage
+3. Docker Compose for running your solution
+4. Proper error handling and logging
+5. Rate limit handling - respect the API limits
+6. Resumable ingestion - if the process crashes, it should resume from where it left off
+
+Notes:
+Suppose you and I will work as a team.
+
+I will go in and explore the API thoroughly and report back on the endpoints and how they should be called.
+
+You will design and produce the data ingestion system according to the requirements.
+
+
+Suppose you start in a root directory that only has the following two files:
+- docker-compose.yml
+- run-ingestion.sh
+
+First, before we do anything. I want you to carefully analyze these files and describe exactly what you will be producing.

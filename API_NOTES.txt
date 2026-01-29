@@ -1,0 +1,1269 @@
+1. API Base URL - What's the actual endpoint?                                                                                                                    
+2. Authentication - How does the X-API-Key header work? What key should be used?                                                                                 
+3. Endpoints - What endpoints exist for fetching events?                                                                                                         
+4. Pagination - How is pagination handled (cursor-based, offset-based, etc.)?                                                                                    
+5. Rate limits - What are the limits? Are they in response headers?                                                                                              
+6. Event schema - What fields does each event contain?
+
+
+
+Timestamp formats may vary across responses - normalize carefully
+
+
+1. Stream Access Endpoint:
+- this allows us to gain access to a streaming endpoint.
+here is a curl request:
+curl 'http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/internal/dashboard/stream-access' \
+  -X 'POST' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: en-US,en;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Length: 0' \
+  -H 'Content-Type: application/json' \
+  -b 'dashboard_api_key=ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'Origin: http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com' \
+  -H 'Referer: http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36' \
+  -H 'X-API-Key: ds_02af351e5f871d09a5410dcfef149f2b' \
+  --insecure
+
+  here is a corresponding example response:
+  {
+    "streamAccess": {
+        "endpoint": "/api/v1/events/d4ta/x7k9/feed",
+        "token": "b481966774f724f2589dc65219d121d7cc6354fc9d5d31b4c3e80bbd1905e510",
+        "expiresIn": 300,
+        "tokenHeader": "X-Stream-Token"
+    },
+    "meta": {
+        "generatedAt": "2026-01-29T22:25:09.614Z",
+        "note": "Token is required in X-Stream-Token header when accessing the stream endpoint"
+    }
+}
+
+
+2. Actually using the stream for the first time.
+Here is an example curl request:
+curl 'http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/api/v1/events/d4ta/x7k9/feed' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: en-US,en;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -b 'dashboard_api_key=ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'Referer: http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36' \
+  -H 'X-API-Key: ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'X-Stream-Token: be76acb5c20b63116d2acb212454dd9052745a31a332f47bdf5fa344f186832b' \
+  --insecure
+
+  example response:
+  {
+    "data": [
+        {
+            "id": "56a349b5-7243-4e0c-9fd8-f2c1eb2a5d35",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "click",
+            "name": "event_e8o287",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541612369,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "065a1ce4-7f87-4dc0-a18a-6ee5cdbaf027",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "page_view",
+            "name": "event_3laxn6",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541553629,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "a90549db-0eb5-4d60-856f-65e44421e97e",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "click",
+            "name": "event_no3fza",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541534535,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "51a705a3-a3c7-464f-aa5d-3ce86b0a1298",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "form_submit",
+            "name": "event_8pcar7",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541528730,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "e9220fae-24aa-4164-b1e1-df60b4ecf884",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "page_view",
+            "name": "event_6yv1vh",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541514766,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "57c12922-6450-4a9b-8108-b8f75a5e758b",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "click",
+            "name": "event_5ufuk0",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541466806,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "88bbbb21-1954-48f6-bef3-db62a9aa041f",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "page_view",
+            "name": "event_1lujzy",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541453099,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "7b93fdb0-63c9-48a7-a7f8-88779490962e",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "page_view",
+            "name": "event_pfqab3",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541449756,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "89646678-eb5f-412c-aaeb-7d2f94599418",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_z8ao5t",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541447617,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "eda628f3-c122-413e-94c0-02a092273f75",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "click",
+            "name": "event_rw99hw",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541436761,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "c11d8a8a-82c3-4e83-b6da-8f389c851a27",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "api_call",
+            "name": "event_hjgpsz",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541419323,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "abe04ae5-27b2-404f-ac5b-90dbe47dc6e5",
+            "sessionId": "f00bbb01-1269-4198-948c-ae2af64eac39",
+            "userId": "b16152f5-e785-4127-97c0-3269b2127a3a",
+            "type": "form_submit",
+            "name": "event_uobjvk",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541391708,
+            "session": {
+                "id": "f00bbb01-1269-4198-948c-ae2af64eac39",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        },
+        {
+            "id": "74ad149e-b491-4843-ae47-c03366954ab0",
+            "sessionId": "f00bbb01-1269-4198-948c-ae2af64eac39",
+            "userId": "b16152f5-e785-4127-97c0-3269b2127a3a",
+            "type": "click",
+            "name": "event_a41fhn",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541391488,
+            "session": {
+                "id": "f00bbb01-1269-4198-948c-ae2af64eac39",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        },
+        {
+            "id": "af8824a5-56f5-4793-9e4b-a7961a223246",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_586oy6",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541374654,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "b4624b66-717a-4210-85c7-26cdddcb140b",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "form_submit",
+            "name": "event_r38ay0",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541366962,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "3bcbc805-c3c5-47b2-b94b-21f7d9bd82fa",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "page_view",
+            "name": "event_w68vee",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541359782,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "400263e1-3939-4c55-ac91-3b8b2cb6b59c",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "scroll",
+            "name": "event_15ne5v",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541338475,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "934adab7-2415-41bd-babc-302e5b6fbeb3",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "api_call",
+            "name": "event_myi819",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541315375,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "9f32d6c5-02cf-49ab-9656-5deda20def74",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "api_call",
+            "name": "event_dkv5db",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541312529,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "de46fef3-2d8a-4573-b05d-d252ca73eb80",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "click",
+            "name": "event_ykdjpq",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541307343,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "a21f51f7-d403-46f7-8bd5-dcd2f1aaef5b",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "click",
+            "name": "event_gvct3n",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541301071,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "411c8ca0-d9dc-4cce-9f3b-d45d6ec6056f",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "click",
+            "name": "event_1o7zwy",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541295558,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "cd38e2d0-a242-4215-8a66-3226db2c7852",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "page_view",
+            "name": "event_n879ql",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541284797,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "3ffa04cd-9515-4b4b-a5ad-51a6abd46eb5",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_4uz9ff",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541264731,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "e644c9ad-c752-4ea8-a359-308cdf69a6fc",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "error",
+            "name": "event_rp5uw2",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541248380,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        }
+    ],
+    "pagination": {
+        "limit": 25,
+        "hasMore": true,
+        "nextCursor": "eyJpZCI6ImU2NDRjOWFkLWM3NTItNGVhOC1hMzU5LTMwOGNkZjY5YTZmYyIsInRzIjoxNzY5NTQxMjQ4MzgwLCJ2IjoyLCJleHAiOjE3Njk3MjY2Mzg3ODR9",
+        "cursorExpiresIn": 119
+    },
+    "meta": {
+        "total": 3000000,
+        "returned": 25,
+        "requestId": "45e7fa75-3ede-426e-beb1-02a798224c53"
+    }
+}
+
+3. Using the for the second time onwards:
+here's an example curl request:
+curl 'http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/api/v1/events/d4ta/x7k9/feed?cursor=eyJpZCI6ImU2NDRjOWFkLWM3NTItNGVhOC1hMzU5LTMwOGNkZjY5YTZmYyIsInRzIjoxNzY5NTQxMjQ4MzgwLCJ2IjoyLCJleHAiOjE3Njk3MjY2Mzg3ODR9' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: en-US,en;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -b 'dashboard_api_key=ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'Referer: http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36' \
+  -H 'X-API-Key: ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'X-Stream-Token: be76acb5c20b63116d2acb212454dd9052745a31a332f47bdf5fa344f186832b' \
+  --insecure
+
+  here's an example response:
+  {
+    "data": [
+        {
+            "id": "5f514fda-2d63-47d5-be1c-b26ea9f8fd01",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "api_call",
+            "name": "event_q3ggly",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541241324,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "99a28e22-f66e-4a45-b5ee-b63eeb58061d",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "api_call",
+            "name": "event_zf00t1",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541233989,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "525ae021-fcd8-48ad-987d-c0a6403e2a22",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "page_view",
+            "name": "event_c4rzk5",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541226436,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "ea4032c1-1185-40c8-8e11-da8670464dd0",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "video_play",
+            "name": "event_dze5j1",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541218458,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "c88f4e41-ebb9-4ace-883f-4b95bfc363c5",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "page_view",
+            "name": "event_ntlxh5",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541216476,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "b854ad6b-4216-40b0-9049-c0589bd58342",
+            "sessionId": "a6d2f1ad-b18f-4d58-ab2a-59085067f6c1",
+            "userId": "56f87cb8-acd5-4aea-a66c-e72c17c90501",
+            "type": "scroll",
+            "name": "event_xezvb7",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541215196,
+            "session": {
+                "id": "a6d2f1ad-b18f-4d58-ab2a-59085067f6c1",
+                "deviceType": "tablet",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "7be6af82-88c9-4f1a-8637-582398bc20cf",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "page_view",
+            "name": "event_n6ql31",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541201337,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "fd007b9b-2def-4532-a26b-8a94f2a87257",
+            "sessionId": "f00bbb01-1269-4198-948c-ae2af64eac39",
+            "userId": "b16152f5-e785-4127-97c0-3269b2127a3a",
+            "type": "page_view",
+            "name": "event_ty0utk",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541171617,
+            "session": {
+                "id": "f00bbb01-1269-4198-948c-ae2af64eac39",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        },
+        {
+            "id": "09c6fdb8-4275-4016-a824-9a631953c39f",
+            "sessionId": "e97fce07-5f2d-4284-b160-0dac8532cc25",
+            "userId": "c4333c34-2815-4080-b5b8-d8812a74fd19",
+            "type": "page_view",
+            "name": "event_1fcaqp",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541165133,
+            "session": {
+                "id": "e97fce07-5f2d-4284-b160-0dac8532cc25",
+                "deviceType": "mobile",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "c6621a60-ebc9-465f-ab61-27858e072df9",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "api_call",
+            "name": "event_j5on0y",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541160177,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "8b7169a3-e743-41d6-81b6-eba56ad90f07",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "form_submit",
+            "name": "event_w1rjde",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541155983,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "1d83a660-3aaa-4856-8841-f526e216cf40",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "form_submit",
+            "name": "event_6pjbk5",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541147361,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "77769915-40cb-4b47-8d89-71fac953efe7",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "scroll",
+            "name": "event_dmt8k7",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541142610,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "afcb0ab7-5086-47dd-b2ba-616adb0e182c",
+            "sessionId": "a6d2f1ad-b18f-4d58-ab2a-59085067f6c1",
+            "userId": "56f87cb8-acd5-4aea-a66c-e72c17c90501",
+            "type": "form_submit",
+            "name": "event_x6mi76",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541142382,
+            "session": {
+                "id": "a6d2f1ad-b18f-4d58-ab2a-59085067f6c1",
+                "deviceType": "tablet",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "31f6b129-df37-4891-b3ae-5ee196112afd",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_ean2h9",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541141424,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "3552bc53-d451-4ce3-a263-90bfec2f243c",
+            "sessionId": "a6d2f1ad-b18f-4d58-ab2a-59085067f6c1",
+            "userId": "56f87cb8-acd5-4aea-a66c-e72c17c90501",
+            "type": "api_call",
+            "name": "event_08vvpu",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541139066,
+            "session": {
+                "id": "a6d2f1ad-b18f-4d58-ab2a-59085067f6c1",
+                "deviceType": "tablet",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "05be3590-422c-47b9-a059-f33e2646e75b",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_y014sy",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541107658,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "8d545c7e-a6e2-482d-9454-4e09f55b537d",
+            "sessionId": "e97fce07-5f2d-4284-b160-0dac8532cc25",
+            "userId": "c4333c34-2815-4080-b5b8-d8812a74fd19",
+            "type": "click",
+            "name": "event_35wlbd",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541105389,
+            "session": {
+                "id": "e97fce07-5f2d-4284-b160-0dac8532cc25",
+                "deviceType": "mobile",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "d03a7fb4-deb9-44f3-8219-6df893694afc",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "form_submit",
+            "name": "event_do3fcj",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541102086,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "bb8f82d3-f125-46c1-96b4-3e24573c9f31",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "form_submit",
+            "name": "event_oof2na",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541101853,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "fc5ad6e6-e963-4ae4-b82b-51e66e405580",
+            "sessionId": "4c17f4c5-624e-46c8-be0f-e7d05afde475",
+            "userId": "52c0bb23-82bd-465f-9570-a02e7dc52b1e",
+            "type": "error",
+            "name": "event_4nml7p",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541100725,
+            "session": {
+                "id": "4c17f4c5-624e-46c8-be0f-e7d05afde475",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        },
+        {
+            "id": "9377f7a3-318c-472a-83a0-e0a94367ece5",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "page_view",
+            "name": "event_lay0q4",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541098803,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "41b40289-2354-4a5c-886a-a75f8bdaa46d",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_1o63tk",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541096342,
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "529a4974-bdbe-47ce-ae65-a654275a688c",
+            "sessionId": "e97fce07-5f2d-4284-b160-0dac8532cc25",
+            "userId": "c4333c34-2815-4080-b5b8-d8812a74fd19",
+            "type": "click",
+            "name": "event_gt1ccg",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541095048,
+            "session": {
+                "id": "e97fce07-5f2d-4284-b160-0dac8532cc25",
+                "deviceType": "mobile",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "34f3c779-3d9b-4c6a-b8bf-6da9374a9a65",
+            "sessionId": "f00bbb01-1269-4198-948c-ae2af64eac39",
+            "userId": "b16152f5-e785-4127-97c0-3269b2127a3a",
+            "type": "page_view",
+            "name": "event_4c09r8",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541085521,
+            "session": {
+                "id": "f00bbb01-1269-4198-948c-ae2af64eac39",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        }
+    ],
+    "pagination": {
+        "limit": 25,
+        "hasMore": true,
+        "nextCursor": "eyJpZCI6IjM0ZjNjNzc5LTNkOWItNGM2YS1iOGJmLTZkYTkzNzRhOWE2NSIsInRzIjoxNzY5NTQxMDg1NTIxLCJ2IjoyLCJleHAiOjE3Njk3MjY2NDk0MTl9",
+        "cursorExpiresIn": 119
+    },
+    "meta": {
+        "total": 3000000,
+        "returned": 25,
+        "requestId": "0d4682f5-fed6-4956-857e-2e09e80e3a00"
+    }
+}
+
+
+4. Using Non-streaming events endpoint (first time).
+here is an example curl request:
+curl 'http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/api/v1/events?limit=20' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: en-US,en;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -b 'dashboard_api_key=ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'If-None-Match: W/"1c28-L4lALLO7RbSKmq+I2wEDaQt02d0"' \
+  -H 'Referer: http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36' \
+  -H 'X-API-Key: ds_02af351e5f871d09a5410dcfef149f2b' \
+  --insecure
+
+here is the example response:
+{
+    "data": [
+        {
+            "id": "56a349b5-7243-4e0c-9fd8-f2c1eb2a5d35",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "click",
+            "name": "event_e8o287",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541612369,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "065a1ce4-7f87-4dc0-a18a-6ee5cdbaf027",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "page_view",
+            "name": "event_3laxn6",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:19:13.629Z",
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "a90549db-0eb5-4d60-856f-65e44421e97e",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "click",
+            "name": "event_no3fza",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:18:54.535Z",
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "51a705a3-a3c7-464f-aa5d-3ce86b0a1298",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "form_submit",
+            "name": "event_8pcar7",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541528730,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "e9220fae-24aa-4164-b1e1-df60b4ecf884",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "page_view",
+            "name": "event_6yv1vh",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:18:34.766Z",
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "57c12922-6450-4a9b-8108-b8f75a5e758b",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "click",
+            "name": "event_5ufuk0",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:17:46.806Z",
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "88bbbb21-1954-48f6-bef3-db62a9aa041f",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "page_view",
+            "name": "event_1lujzy",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541453099,
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "7b93fdb0-63c9-48a7-a7f8-88779490962e",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "page_view",
+            "name": "event_pfqab3",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:17:29.756Z",
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "89646678-eb5f-412c-aaeb-7d2f94599418",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_z8ao5t",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:17:27.617Z",
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "eda628f3-c122-413e-94c0-02a092273f75",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "click",
+            "name": "event_rw99hw",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541436761,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "c11d8a8a-82c3-4e83-b6da-8f389c851a27",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "api_call",
+            "name": "event_hjgpsz",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:16:59.323Z",
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "abe04ae5-27b2-404f-ac5b-90dbe47dc6e5",
+            "sessionId": "f00bbb01-1269-4198-948c-ae2af64eac39",
+            "userId": "b16152f5-e785-4127-97c0-3269b2127a3a",
+            "type": "form_submit",
+            "name": "event_uobjvk",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:16:31.708Z",
+            "session": {
+                "id": "f00bbb01-1269-4198-948c-ae2af64eac39",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        },
+        {
+            "id": "74ad149e-b491-4843-ae47-c03366954ab0",
+            "sessionId": "f00bbb01-1269-4198-948c-ae2af64eac39",
+            "userId": "b16152f5-e785-4127-97c0-3269b2127a3a",
+            "type": "click",
+            "name": "event_a41fhn",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541391488,
+            "session": {
+                "id": "f00bbb01-1269-4198-948c-ae2af64eac39",
+                "deviceType": "tablet",
+                "browser": "Firefox"
+            }
+        },
+        {
+            "id": "af8824a5-56f5-4793-9e4b-a7961a223246",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "page_view",
+            "name": "event_586oy6",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:16:14.654Z",
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "b4624b66-717a-4210-85c7-26cdddcb140b",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "form_submit",
+            "name": "event_r38ay0",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:16:06.962Z",
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "3bcbc805-c3c5-47b2-b94b-21f7d9bd82fa",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "page_view",
+            "name": "event_w68vee",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541359782,
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "400263e1-3939-4c55-ac91-3b8b2cb6b59c",
+            "sessionId": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+            "userId": "e06871e4-03fe-4cea-bc67-598eacdde4e1",
+            "type": "scroll",
+            "name": "event_15ne5v",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:15:38.475Z",
+            "session": {
+                "id": "bd186d89-fcb5-44a1-b777-99074fc672bc",
+                "deviceType": "mobile",
+                "browser": "Chrome"
+            }
+        },
+        {
+            "id": "934adab7-2415-41bd-babc-302e5b6fbeb3",
+            "sessionId": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+            "userId": "498bac8d-1cc6-4704-8ab7-272a84a27aee",
+            "type": "api_call",
+            "name": "event_myi819",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:15:15.375Z",
+            "session": {
+                "id": "a6993074-bef4-4c4e-9924-1893e2acc59d",
+                "deviceType": "tablet",
+                "browser": "Safari"
+            }
+        },
+        {
+            "id": "9f32d6c5-02cf-49ab-9656-5deda20def74",
+            "sessionId": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+            "userId": "1f2a12b4-1bdc-463d-ba74-f6d849f5b76f",
+            "type": "api_call",
+            "name": "event_dkv5db",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": 1769541312529,
+            "session": {
+                "id": "0ae5e27f-bcc5-4d99-b744-3ce64d3623a9",
+                "deviceType": "tablet",
+                "browser": "Edge"
+            }
+        },
+        {
+            "id": "de46fef3-2d8a-4573-b05d-d252ca73eb80",
+            "sessionId": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+            "userId": "05fc078f-8aaa-43aa-8116-f25cf62a1f4d",
+            "type": "click",
+            "name": "event_ykdjpq",
+            "properties": {
+                "page": "/home"
+            },
+            "timestamp": "2026-01-27T19:15:07.343Z",
+            "session": {
+                "id": "8a999d37-7532-4a32-80c5-d303a8b9c356",
+                "deviceType": "mobile",
+                "browser": "Edge"
+            }
+        }
+    ],
+    "pagination": {
+        "limit": 20,
+        "hasMore": true,
+        "nextCursor": "eyJpZCI6ImRlNDZmZWYzLTJkOGEtNDU3My1iMDVkLWQyNTJjYTczZWI4MCIsInRzIjoxNzY5NTQxMzA3MzQzLCJ2IjoyLCJleHAiOjE3Njk3Mjg2Mjk5OTN9",
+        "cursorExpiresIn": 119
+    },
+    "meta": {
+        "total": 3000000,
+        "returned": 20,
+        "requestId": "6a23c865-91c2-40f9-aef1-5fdf8d3851fe"
+    }
+}
+
+5. Using non-streaming endpoint (second time onwards)
+here is an example curl request:
+curl 'http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/api/v1/events?limit=20&cursor=eyJpZCI6ImRlNDZmZWYzLTJkOGEtNDU3My1iMDVkLWQyNTJjYTczZWI4MCIsInRzIjoxNzY5NTQxMzA3MzQzLCJ2IjoyLCJleHAiOjE3Njk3Mjg2Mjk5OTN9' \
+  -H 'Accept: */*' \
+  -H 'Accept-Language: en-US,en;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -b 'dashboard_api_key=ds_02af351e5f871d09a5410dcfef149f2b' \
+  -H 'Referer: http://datasync-dev-alb-101078500.us-east-1.elb.amazonaws.com/' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36' \
+  -H 'X-API-Key: ds_02af351e5f871d09a5410dcfef149f2b' \
+  --insecure
+
+  Here is the example response:
+  
