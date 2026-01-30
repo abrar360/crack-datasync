@@ -145,8 +145,10 @@ def fetch_all_events_hybrid():
 
                     pagination = resp_json.get("pagination", {})
                     if not pagination.get("hasMore"):
-                        print(f"[INFO] No more pages. Total events parsed: {total_parsed}")
-                        return total_parsed
+                        # Don't trust streaming endpoint's hasMore as definitive
+                        # Break out and let non-streaming endpoint verify
+                        print(f"[INFO] Stream endpoint reports no more pages. Verifying with non-streaming endpoint...")
+                        break
 
                     cursor = pagination.get("nextCursor")
                     page += 1
