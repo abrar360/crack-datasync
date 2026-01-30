@@ -2,7 +2,7 @@ How to run my solution:
 sh run-ingestion.sh
 
 Architecture overview:
-- outlined in API
+
 Any discoveries about the API:
 - Outlined in API_ANALYSIS.md
 What you would improve with more time:
