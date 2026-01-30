@@ -68,10 +68,16 @@ def fetch_nonstream_page(cursor=None, limit=100000):
     return response.json(), 0
 
 
+class StreamTokenExpired(Exception):
+    """Raised when stream token is expired or invalid (403)."""
+    pass
+
+
 def fetch_stream_page(endpoint, token, token_header, cursor=None):
     """
     Fetch a page from the streaming endpoint.
     Returns (response_json, rate_limit_delay) where rate_limit_delay > 0 if rate-limited.
+    Raises StreamTokenExpired if 403 Forbidden is received.
     """
     url = f"{BASE_URL}{endpoint}"
     if cursor:
@@ -81,6 +87,9 @@ def fetch_stream_page(endpoint, token, token_header, cursor=None):
     stream_headers[token_header] = token
 
     resp = requests.get(url, headers=stream_headers, cookies=COOKIES, verify=False, timeout=30)
+
+    if resp.status_code == 403:
+        raise StreamTokenExpired("Stream token expired or invalid")
 
     if resp.status_code == 429:
         error_body = resp.json()
@@ -95,8 +104,9 @@ def fetch_all_events_hybrid():
     """
     Fetch all events using non-streaming endpoint primarily.
     When rate-limited, switch to streaming endpoint for the wait period.
+    Returns list of all event IDs.
     """
-    total_parsed = 0
+    all_event_ids = []
     cursor = None
     page = 1
 
@@ -132,26 +142,33 @@ def fetch_all_events_hybrid():
                     print(f"[STREAM] Fetching page {page} (cursor: {cursor[-8:] if cursor else 'None'})...")
                     resp_json, stream_rate_limit_delay = fetch_stream_page(stream_endpoint, stream_token, stream_token_header, cursor)
 
-                    if stream_rate_limit_delay > 0:
-                        # Streaming endpoint is also rate-limited
-                        print(f"[WARN] Stream endpoint rate limited. Waiting {stream_rate_limit_delay} seconds...")
-                        time.sleep(stream_rate_limit_delay + 1)  # Add buffer
+                    if stream_rate_limit_delay > 0 or resp_json is None:
+                        # Streaming endpoint is rate-limited or returned empty response
+                        wait_time = stream_rate_limit_delay if stream_rate_limit_delay > 0 else 2
+                        print(f"[WARN] Stream endpoint rate limited or empty. Waiting {wait_time} seconds...")
+                        time.sleep(wait_time + 1)  # Add buffer
                         continue
 
                     data = resp_json.get("data", [])
-                    num_parsed = sum(1 for event in data if is_valid_event(event))
-                    total_parsed += num_parsed
-                    print(f"[STREAM] Page {page}: Parsed {num_parsed} events (total: {total_parsed})")
+                    page_ids = [event["id"] for event in data if is_valid_event(event)]
+                    all_event_ids.extend(page_ids)
+                    print(f"[STREAM] Page {page}: Parsed {len(page_ids)} events (total: {len(all_event_ids)})")
 
                     pagination = resp_json.get("pagination", {})
                     if not pagination.get("hasMore"):
                         # Don't trust streaming endpoint's hasMore as definitive
                         # Break out and let non-streaming endpoint verify
-                        print(f"[INFO] Stream endpoint reports no more pages. Verifying with non-streaming endpoint...")
+                        print(f"[INFO] Stream endpoint reports no more pages (total so far: {len(all_event_ids)}). Verifying with non-streaming endpoint...")
                         break
 
                     cursor = pagination.get("nextCursor")
                     page += 1
+
+                except StreamTokenExpired:
+                    print(f"[WARN] Stream token expired. Refreshing credentials...")
+                    stream_endpoint, stream_token, stream_token_header = get_stream_access()
+                    # Retry immediately with new credentials
+                    continue
 
                 except Exception as e:
                     print(f"[WARN] Stream fetch error: {e}")
@@ -165,10 +182,15 @@ def fetch_all_events_hybrid():
             continue
 
         # Non-streaming request succeeded
+        if resp_json is None:
+            print(f"[WARN] Non-streaming returned empty response. Retrying...")
+            time.sleep(2)
+            continue
+
         data = resp_json.get("data", [])
-        num_parsed = sum(1 for event in data if is_valid_event(event))
-        total_parsed += num_parsed
-        print(f"[NONSTREAM] Page {page}: Parsed {num_parsed} events (total: {total_parsed})")
+        page_ids = [event["id"] for event in data if is_valid_event(event)]
+        all_event_ids.extend(page_ids)
+        print(f"[NONSTREAM] Page {page}: Parsed {len(page_ids)} events (total: {len(all_event_ids)})")
 
         pagination = resp_json.get("pagination", {})
         if not pagination.get("hasMore"):
@@ -177,10 +199,17 @@ def fetch_all_events_hybrid():
         cursor = pagination.get("nextCursor")
         page += 1
 
-    print(f"[INFO] Total events parsed: {total_parsed}")
-    return total_parsed
+    print(f"[INFO] Total events parsed: {len(all_event_ids)}")
+    print(f"[INFO] Total unique events parsed: {len(set(all_event_ids))}")
+    return all_event_ids
 
 
 if __name__ == "__main__":
     print("[INFO] Starting hybrid event fetch (non-stream primary, stream on rate limit)...")
-    fetch_all_events_hybrid()
+    event_ids = fetch_all_events_hybrid()
+
+    # Save event IDs to file
+    with open("event_ids.txt", "w") as f:
+        for event_id in event_ids:
+            f.write(f"{event_id}\n")
+    print(f"[INFO] Saved {len(event_ids)} event IDs to event_ids.txt")
